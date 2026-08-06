@@ -1,0 +1,67 @@
+package com.letovpn.checker;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
+import android.os.Bundle;
+import android.widget.RadioGroup;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.radiobutton.MaterialRadioButton;
+import com.google.android.material.slider.Slider;
+
+public class SettingsActivity extends AppCompatActivity {
+
+    public static final String PREFS = "letovpn_prefs";
+    public static final String KEY_MODE = "mode";
+    public static final String KEY_COUNT = "count";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_settings);
+
+        SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+
+        RadioGroup modeGroup = findViewById(R.id.modeGroup);
+        MaterialRadioButton radioTcp = findViewById(R.id.radioTcp);
+        MaterialRadioButton radioProxy = findViewById(R.id.radioProxy);
+        Slider slider = findViewById(R.id.countSlider);
+        TextView countValue = findViewById(R.id.countValue);
+        MaterialButton btnTelegram = findViewById(R.id.btnTelegram);
+        MaterialButton btnSave = findViewById(R.id.btnSaveSettings);
+
+        String mode = prefs.getString(KEY_MODE, "TCP");
+        if ("PROXY_GET".equals(mode)) {
+            radioProxy.setChecked(true);
+        } else {
+            radioTcp.setChecked(true);
+        }
+
+        int count = prefs.getInt(KEY_COUNT, 50);
+        slider.setValue(count);
+        countValue.setText(String.valueOf(count));
+
+        slider.addOnChangeListener((s, value, fromUser) -> {
+            countValue.setText(String.valueOf((int) value));
+        });
+
+        btnTelegram.setOnClickListener(v -> {
+            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/letovpn_free"));
+            startActivity(i);
+        });
+
+        btnSave.setOnClickListener(v -> {
+            String selectedMode = radioProxy.isChecked() ? "PROXY_GET" : "TCP";
+            int selectedCount = (int) slider.getValue();
+
+            prefs.edit()
+                    .putString(KEY_MODE, selectedMode)
+                    .putInt(KEY_COUNT, selectedCount)
+                    .apply();
+
+            finish();
+        });
+    }
+}
