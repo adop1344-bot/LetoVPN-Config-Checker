@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ConfigAdapter adapter;
 
-    private final ExecutorService executor = Executors.newFixedThreadPool(12);
+    private ExecutorService executor;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private volatile boolean isRunning = false;
 
@@ -88,6 +88,15 @@ public class MainActivity extends AppCompatActivity {
         progressBar.setProgress(0);
         statusText.setText("Загрузка источников...");
 
+        SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS, MODE_PRIVATE);
+        int threads = prefs.getInt(SettingsActivity.KEY_THREADS, 12);
+
+        // Create / recreate executor with selected thread count
+        if (executor != null && !executor.isShutdown()) {
+            executor.shutdownNow();
+        }
+        executor = Executors.newFixedThreadPool(Math.max(2, threads));
+
         executor.execute(() -> {
             try {
                 List<String> sources = fetchLines(SOURCES_URL);
@@ -106,10 +115,8 @@ public class MainActivity extends AppCompatActivity {
                     } catch (Exception ignored) {}
                 }
 
-                // unique
                 List<String> unique = new ArrayList<>(new java.util.LinkedHashSet<>(allConfigs));
 
-                SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS, MODE_PRIVATE);
                 int maxCount = prefs.getInt(SettingsActivity.KEY_COUNT, 50);
                 String modeStr = prefs.getString(SettingsActivity.KEY_MODE, "TCP");
                 ConfigChecker.Mode mode = "PROXY_GET".equals(modeStr) ? ConfigChecker.Mode.PROXY_GET : ConfigChecker.Mode.TCP;
@@ -120,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
                 final int total = unique.size();
                 mainHandler.post(() -> {
-                    statusText.setText("Найдено: " + total + " | Режим: " + modeStr);
+                    statusText.setText("Найдено: " + total + " | Режим: " + modeStr + " | Потоков: " + threads);
                     progressBar.setMax(total);
                 });
 
@@ -140,7 +147,6 @@ public class MainActivity extends AppCompatActivity {
                         mainHandler.post(() -> {
                             if (item.working) {
                                 workingConfigs.add(item);
-                                // sort live by latency
                                 Collections.sort(workingConfigs, (a, b) -> Long.compare(a.latency, b.latency));
                                 adapter.setItems(new ArrayList<>(workingConfigs));
                             }
@@ -235,6 +241,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         isRunning = false;
-        executor.shutdownNow();
+        if (executor != null) {
+            executor.shutdownNow();
+        }
     }
 }
