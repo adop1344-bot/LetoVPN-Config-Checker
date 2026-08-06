@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.button.MaterialButton;
@@ -16,6 +15,7 @@ public class SettingsActivity extends AppCompatActivity {
     public static final String PREFS = "letovpn_prefs";
     public static final String KEY_MODE = "mode";
     public static final String KEY_COUNT = "count";
+    public static final String KEY_THREADS = "threads";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,11 +24,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
 
-        RadioGroup modeGroup = findViewById(R.id.modeGroup);
         MaterialRadioButton radioTcp = findViewById(R.id.radioTcp);
         MaterialRadioButton radioProxy = findViewById(R.id.radioProxy);
-        Slider slider = findViewById(R.id.countSlider);
+        Slider countSlider = findViewById(R.id.countSlider);
         TextView countValue = findViewById(R.id.countValue);
+        Slider threadsSlider = findViewById(R.id.threadsSlider);
+        TextView threadsValue = findViewById(R.id.threadsValue);
         MaterialButton btnTelegram = findViewById(R.id.btnTelegram);
         MaterialButton btnSave = findViewById(R.id.btnSaveSettings);
 
@@ -40,11 +41,19 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         int count = prefs.getInt(KEY_COUNT, 50);
-        slider.setValue(count);
+        countSlider.setValue(count);
         countValue.setText(String.valueOf(count));
 
-        slider.addOnChangeListener((s, value, fromUser) -> {
+        int threads = prefs.getInt(KEY_THREADS, 12);
+        threadsSlider.setValue(threads);
+        threadsValue.setText(String.valueOf(threads));
+
+        countSlider.addOnChangeListener((s, value, fromUser) -> {
             countValue.setText(String.valueOf((int) value));
+        });
+
+        threadsSlider.addOnChangeListener((s, value, fromUser) -> {
+            threadsValue.setText(String.valueOf((int) value));
         });
 
         btnTelegram.setOnClickListener(v -> {
@@ -54,11 +63,13 @@ public class SettingsActivity extends AppCompatActivity {
 
         btnSave.setOnClickListener(v -> {
             String selectedMode = radioProxy.isChecked() ? "PROXY_GET" : "TCP";
-            int selectedCount = (int) slider.getValue();
+            int selectedCount = (int) countSlider.getValue();
+            int selectedThreads = (int) threadsSlider.getValue();
 
             prefs.edit()
                     .putString(KEY_MODE, selectedMode)
                     .putInt(KEY_COUNT, selectedCount)
+                    .putInt(KEY_THREADS, selectedThreads)
                     .apply();
 
             finish();
