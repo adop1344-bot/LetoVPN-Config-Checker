@@ -1,10 +1,15 @@
 package com.letovpn.checker;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
@@ -58,6 +63,12 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
             h.status.setText("FAIL");
             h.status.setTextColor(Color.parseColor("#FF5252"));
         }
+
+        h.btnCopy.setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager) v.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
+            clipboard.setPrimaryClip(ClipData.newPlainText("config", item.raw));
+            Toast.makeText(v.getContext(), "Скопировано", Toast.LENGTH_SHORT).show();
+        });
     }
 
     @Override
@@ -67,6 +78,7 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView name, host, latency, status;
+        ImageButton btnCopy;
 
         ViewHolder(View v) {
             super(v);
@@ -74,6 +86,7 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
             host = v.findViewById(R.id.configHost);
             latency = v.findViewById(R.id.configLatency);
             status = v.findViewById(R.id.configStatus);
+            btnCopy = v.findViewById(R.id.btnCopy);
         }
     }
 }
