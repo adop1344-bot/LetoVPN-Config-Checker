@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LetoVPN Checker</string>
+    <string name="start_check">Проверить конфиги</string>
+    <string name="settings">Настройки</string>
+    <string name="stop">Остановить</string>
+    <string name="save_all">Сохранить все</string>
+    <string name="copy_top10">Копировать топ-10</string>
+    <string name="checking">Проверка...</string>
+    <string name="no_results">Нет результатов</string>
+    <string name="mode_tcp">TCP</string>
+    <string name="mode_proxy">Via Proxy GET</string>
+    <string name="telegram">Telegram канал</string>
+    <string name="configs_count">Количество конфигов</string>
+</resources>

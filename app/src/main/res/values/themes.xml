@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.LetoVPN" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#00E676</item>
+        <item name="colorPrimaryContainer">#003D1A</item>
+        <item name="colorSecondary">#69F0AE</item>
+        <item name="colorSurface">#0D1117</item>
+        <item name="colorOnSurface">#E6EDF3</item>
+        <item name="android:statusBarColor">#0D1117</item>
+        <item name="android:navigationBarColor">#0D1117</item>
+        <item name="android:windowBackground">#0D1117</item>
+    </style>
+</resources>
