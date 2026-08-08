@@ -12,21 +12,23 @@ import okhttp3.Response;
 public class ConfigChecker {
 
     public enum Method {
-        TCP,       // Неточная (TCP)
-        TCP_DNS,   // Средняя (TCP+DNS)
-        PROXY_GET, // Точная (Via Proxy GET)
-        DEEP,      // Суперточная (Deep)
-        XRAY       // Xray (скачивает ядро)
+        TCP,
+        TCP_DNS,
+        PROXY_GET,
+        DEEP,
+        XRAY,
+        XRAY_SPEED  // точнее Xray: скачивание через туннель
     }
 
     public static String methodName(Method m) {
         switch (m) {
-            case TCP:       return "Неточная (TCP)";
-            case TCP_DNS:   return "Средняя (TCP+DNS)";
-            case PROXY_GET: return "Точная (Via Proxy GET)";
-            case DEEP:      return "Суперточная (Deep)";
-            case XRAY:      return "Xray (ядро)";
-            default:        return "?";
+            case TCP:        return "Неточная (TCP)";
+            case TCP_DNS:    return "Средняя (TCP+DNS)";
+            case PROXY_GET:  return "Точная (Via Proxy GET)";
+            case DEEP:       return "Суперточная (Deep)";
+            case XRAY:       return "Xray (ядро)";
+            case XRAY_SPEED: return "Максимум (Xray Speed)";
+            default:         return "?";
         }
     }
 
@@ -40,18 +42,13 @@ public class ConfigChecker {
         if (item.host == null || item.host.isEmpty() || item.port <= 0) return -1;
 
         switch (method) {
-            case TCP:
-                return tcpConnect(item.host, item.port, 2500);
-            case TCP_DNS:
-                return tcpWithDns(item.host, item.port);
-            case PROXY_GET:
-                return viaProxyGet(item.host, item.port);
-            case DEEP:
-                return deepScan(item.host, item.port);
-            case XRAY:
-                return XrayEngine.test(ctx, item);
-            default:
-                return tcpConnect(item.host, item.port, 3000);
+            case TCP:        return tcpConnect(item.host, item.port, 2500);
+            case TCP_DNS:    return tcpWithDns(item.host, item.port);
+            case PROXY_GET:  return viaProxyGet(item.host, item.port);
+            case DEEP:       return deepScan(item.host, item.port);
+            case XRAY:       return XrayEngine.test(ctx, item, false);
+            case XRAY_SPEED: return XrayEngine.test(ctx, item, true);
+            default:         return tcpConnect(item.host, item.port, 3000);
         }
     }
 
@@ -87,9 +84,7 @@ public class ConfigChecker {
         long start = System.currentTimeMillis();
         try {
             Request request = new Request.Builder()
-                    .url("https://www.gstatic.com/generate_204")
-                    .head()
-                    .build();
+                    .url("https://www.gstatic.com/generate_204").head().build();
             try (Response response = httpClient.newCall(request).execute()) {
                 return tcp + Math.max(0, System.currentTimeMillis() - start);
             }
@@ -127,9 +122,7 @@ public class ConfigChecker {
         try {
             long h0 = System.currentTimeMillis();
             Request request = new Request.Builder()
-                    .url("https://cp.cloudflare.com/generate_204")
-                    .head()
-                    .build();
+                    .url("https://cp.cloudflare.com/generate_204").head().build();
             try (Response response = httpClient.newCall(request).execute()) {
                 if (response.code() == 204 || response.isSuccessful()) {
                     httpExtra = System.currentTimeMillis() - h0;

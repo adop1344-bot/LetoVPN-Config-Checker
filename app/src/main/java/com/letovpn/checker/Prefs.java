@@ -5,16 +5,11 @@ import android.content.SharedPreferences;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Надёжное хранение настроек (фикс бага StringSet в Android). */
 public final class Prefs {
 
     public static final String NAME = "letovpn_prefs_v2";
-
-    public static final String KEY_THEME = "theme";
-    public static final String KEY_METHOD = "method";
-    public static final String KEY_COUNT = "count";
-    public static final String KEY_THREADS = "threads";
-    public static final String KEY_SOURCES = "custom_sources";
+    public static final String SYSTEM_SOURCE =
+            "https://raw.githubusercontent.com/adop1344-bot/LetoVPN_free/refs/heads/main/sources.txt";
 
     private Prefs() {}
 
@@ -23,44 +18,81 @@ public final class Prefs {
     }
 
     public static String getTheme(Context c) {
-        return sp(c).getString(KEY_THEME, ThemeHelper.THEME_DARK);
+        return sp(c).getString("theme", ThemeHelper.THEME_DARK);
     }
 
     public static void setTheme(Context c, String v) {
-        sp(c).edit().putString(KEY_THEME, v).commit();
+        sp(c).edit().putString("theme", v).commit();
     }
 
     public static String getMethod(Context c) {
-        return sp(c).getString(KEY_METHOD, "TCP_DNS");
+        return sp(c).getString("method", "TCP_DNS");
     }
 
     public static void setMethod(Context c, String v) {
-        sp(c).edit().putString(KEY_METHOD, v).commit();
+        sp(c).edit().putString("method", v).commit();
     }
 
     public static int getCount(Context c) {
-        return sp(c).getInt(KEY_COUNT, 50);
+        return sp(c).getInt("count", 50);
     }
 
     public static void setCount(Context c, int v) {
-        sp(c).edit().putInt(KEY_COUNT, v).commit();
+        sp(c).edit().putInt("count", v).commit();
     }
 
     public static int getThreads(Context c) {
-        return sp(c).getInt(KEY_THREADS, 12);
+        return sp(c).getInt("threads", 12);
     }
 
     public static void setThreads(Context c, int v) {
-        sp(c).edit().putInt(KEY_THREADS, v).commit();
+        sp(c).edit().putInt("threads", v).commit();
     }
 
     public static Set<String> getSources(Context c) {
-        Set<String> raw = sp(c).getStringSet(KEY_SOURCES, null);
-        if (raw == null) return new HashSet<>();
-        return new HashSet<>(raw); // обязательно копия!
+        Set<String> raw = sp(c).getStringSet("custom_sources", null);
+        return raw == null ? new HashSet<>() : new HashSet<>(raw);
     }
 
     public static void setSources(Context c, Set<String> sources) {
-        sp(c).edit().putStringSet(KEY_SOURCES, new HashSet<>(sources)).commit();
+        sp(c).edit().putStringSet("custom_sources", new HashSet<>(sources)).commit();
+    }
+
+    /** Отключённые источники (URL). Системный = Prefs.SYSTEM_SOURCE */
+    public static Set<String> getDisabledSources(Context c) {
+        Set<String> raw = sp(c).getStringSet("disabled_sources", null);
+        return raw == null ? new HashSet<>() : new HashSet<>(raw);
+    }
+
+    public static void setDisabledSources(Context c, Set<String> set) {
+        sp(c).edit().putStringSet("disabled_sources", new HashSet<>(set)).commit();
+    }
+
+    public static boolean isSourceEnabled(Context c, String url) {
+        return !getDisabledSources(c).contains(url);
+    }
+
+    public static void setSourceEnabled(Context c, String url, boolean enabled) {
+        Set<String> disabled = getDisabledSources(c);
+        if (enabled) disabled.remove(url);
+        else disabled.add(url);
+        setDisabledSources(c, disabled);
+    }
+
+    /** Остановиться после N рабочих (0 = без лимита) */
+    public static int getStopAfter(Context c) {
+        return sp(c).getInt("stop_after", 0);
+    }
+
+    public static void setStopAfter(Context c, int v) {
+        sp(c).edit().putInt("stop_after", v).commit();
+    }
+
+    public static boolean getOnlyVless(Context c) {
+        return sp(c).getBoolean("only_vless", false);
+    }
+
+    public static void setOnlyVless(Context c, boolean v) {
+        sp(c).edit().putBoolean("only_vless", v).commit();
     }
 }
