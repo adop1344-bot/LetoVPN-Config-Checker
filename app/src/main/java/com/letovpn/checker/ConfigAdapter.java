@@ -25,11 +25,6 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
         notifyDataSetChanged();
     }
 
-    public void addItem(ConfigItem item) {
-        items.add(item);
-        notifyItemInserted(items.size() - 1);
-    }
-
     public void clear() {
         items.clear();
         notifyDataSetChanged();
@@ -54,14 +49,14 @@ public class ConfigAdapter extends RecyclerView.Adapter<ConfigAdapter.ViewHolder
 
         if (item.working) {
             h.latency.setText(item.latency + " ms");
-            h.latency.setTextColor(Color.parseColor("#00E676"));
+            h.latency.setTextColor(Color.parseColor("#00C853"));
             h.status.setText("OK");
-            h.status.setTextColor(Color.parseColor("#00E676"));
+            h.status.setTextColor(Color.parseColor("#00C853"));
         } else {
             h.latency.setText("—");
-            h.latency.setTextColor(Color.parseColor("#8B949E"));
+            h.latency.setTextColor(Color.parseColor("#9E9E9E"));
             h.status.setText("FAIL");
-            h.status.setTextColor(Color.parseColor("#FF5252"));
+            h.status.setTextColor(Color.parseColor("#EF5350"));
         }
 
         h.btnCopy.setOnClickListener(v -> {
