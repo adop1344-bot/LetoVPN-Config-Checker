@@ -1,131 +1,145 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
+<androidx.coordinatorlayout.widget.CoordinatorLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="LetoVPN Checker"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="?attr/colorPrimary"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btnSettings"
-        app:layout_constraintTop_toTopOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <ImageButton
-        android:id="@+id/btnSettings"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:src="@android:drawable/ic_menu_preferences"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="@string/settings"
-        app:tint="?attr/colorOnSurface"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/statsCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardCornerRadius="16dp"
-        app:cardElevation="2dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title">
-
+        <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp"
+            android:paddingBottom="24dp"
+            android:background="?attr/colorPrimaryContainer">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="LetoVPN"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:textColor="?attr/colorPrimary" />
+
+                <ImageButton
+                    android:id="@+id/btnSettings"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@android:drawable/ic_menu_preferences"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="Настройки"
+                    app:tint="?attr/colorOnSurface" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Config Checker"
+                android:textSize="14sp"
+                android:alpha="0.7"
+                android:layout_marginTop="2dp" />
 
             <TextView
                 android:id="@+id/statusText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="14sp"
-                android:text="Готов к проверке" />
+                android:layout_marginTop="16dp"
+                android:text="Готов к проверке"
+                android:textSize="15sp"
+                android:textStyle="bold" />
 
             <ProgressBar
                 android:id="@+id/progressBar"
                 style="?android:attr/progressBarStyleHorizontal"
                 android:layout_width="match_parent"
-                android:layout_height="6dp"
+                android:layout_height="8dp"
                 android:layout_marginTop="10dp"
                 android:visibility="gone"
                 android:progressTint="?attr/colorPrimary" />
         </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnStart"
-        android:layout_width="0dp"
-        android:layout_height="56dp"
-        android:layout_marginTop="14dp"
-        android:text="@string/start_check"
-        android:textSize="16sp"
-        app:cornerRadius="16dp"
-        app:backgroundTint="?attr/colorPrimary"
-        android:textColor="@android:color/black"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/statsCard" />
+        <!-- Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:gravity="center">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recyclerView"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:clipToPadding="false"
-        android:layoutAnimation="@anim/layout_animation_fall_down"
-        app:layout_constraintTop_toBottomOf="@id/btnStart"
-        app:layout_constraintBottom_toTopOf="@id/bottomBar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnStart"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="▶  Проверить"
+                android:textSize="16sp"
+                app:cornerRadius="28dp"
+                app:backgroundTint="?attr/colorPrimary"
+                android:textColor="@android:color/black"
+                android:layout_marginEnd="8dp" />
 
-    <LinearLayout
-        android:id="@+id/bottomBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="8dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSave"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:text="💾"
+                android:enabled="false"
+                app:cornerRadius="28dp"
+                app:strokeColor="?attr/colorPrimary"
+                android:layout_marginEnd="8dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSave"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnCopyTop"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:insetLeft="0dp"
+                android:insetRight="0dp"
+                android:text="📋"
+                android:enabled="false"
+                app:cornerRadius="28dp"
+                app:strokeColor="?attr/colorPrimary" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Рабочие конфиги"
+            android:textSize="13sp"
+            android:alpha="0.6"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="8dp" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
             android:layout_weight="1"
-            android:layout_marginEnd="8dp"
-            android:text="@string/save_all"
-            android:enabled="false"
-            app:strokeColor="?attr/colorPrimary"
-            android:textColor="?attr/colorPrimary"
-            app:cornerRadius="12dp" />
+            android:clipToPadding="false"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="16dp"
+            android:layoutAnimation="@anim/layout_animation_fall_down" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCopyTop"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="0dp"
-            android:layout_height="48dp"
-            android:layout_weight="1"
-            android:text="@string/copy_top10"
-            android:enabled="false"
-            app:strokeColor="?attr/colorPrimary"
-            android:textColor="?attr/colorPrimary"
-            app:cornerRadius="12dp" />
     </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
