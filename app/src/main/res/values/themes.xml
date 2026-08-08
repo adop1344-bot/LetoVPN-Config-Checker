@@ -42,8 +42,10 @@
         <item name="android:windowActivityTransitions">true</item>
     </style>
 
-    <!-- Dynamic will be applied at runtime on Android 12+ -->
-    <style name="Theme.LetoVPN.Dynamic" parent="Theme.Material3.DynamicColors.Dark.NoActionBar">
+    <!-- Dynamic: base dark + DynamicColors applied at runtime on Android 12+ -->
+    <style name="Theme.LetoVPN.Dynamic" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowEnterTransition">@android:transition/fade</item>
+        <item name="android:windowExitTransition">@android:transition/fade</item>
     </style>
 </resources>
