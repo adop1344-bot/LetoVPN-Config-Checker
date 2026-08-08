@@ -15,31 +15,40 @@ public class ThemeHelper {
     public static final String THEME_CUSTOM = "custom";
     public static final String THEME_DYNAMIC = "dynamic";
 
+    /** Вызывать ДО super.onCreate() */
     public static void apply(Activity activity) {
         SharedPreferences prefs = activity.getSharedPreferences(SettingsActivity.PREFS, Context.MODE_PRIVATE);
         String theme = prefs.getString(KEY_THEME, THEME_DARK);
 
+        // 1. Night mode (влияет на системные ресурсы)
+        switch (theme) {
+            case THEME_LIGHT:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+                break;
+            case THEME_DYNAMIC:
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                break;
+            default: // dark + custom
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+                break;
+        }
+
+        // 2. Конкретный стиль
         switch (theme) {
             case THEME_LIGHT:
                 activity.setTheme(R.style.Theme_LetoVPN_Light);
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
                 break;
             case THEME_CUSTOM:
                 activity.setTheme(R.style.Theme_LetoVPN_Custom);
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 break;
             case THEME_DYNAMIC:
+                activity.setTheme(R.style.Theme_LetoVPN_Dynamic);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    activity.setTheme(R.style.Theme_LetoVPN_Dynamic);
                     DynamicColors.applyToActivityIfAvailable(activity);
-                } else {
-                    activity.setTheme(R.style.Theme_LetoVPN);
                 }
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
                 break;
             default:
                 activity.setTheme(R.style.Theme_LetoVPN);
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
                 break;
         }
     }
