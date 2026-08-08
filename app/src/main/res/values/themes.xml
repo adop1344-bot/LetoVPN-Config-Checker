@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Dark (default) -->
     <style name="Theme.LetoVPN" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">#00E676</item>
         <item name="colorPrimaryContainer">#003D1A</item>
@@ -9,5 +10,40 @@
         <item name="android:statusBarColor">#0D1117</item>
         <item name="android:navigationBarColor">#0D1117</item>
         <item name="android:windowBackground">#0D1117</item>
+        <item name="android:windowActivityTransitions">true</item>
+        <item name="android:windowEnterTransition">@android:transition/fade</item>
+        <item name="android:windowExitTransition">@android:transition/fade</item>
+    </style>
+
+    <!-- Light -->
+    <style name="Theme.LetoVPN.Light" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">#00C853</item>
+        <item name="colorPrimaryContainer">#B9F6CA</item>
+        <item name="colorSecondary">#1B5E20</item>
+        <item name="colorSurface">#F5F7FA</item>
+        <item name="colorOnSurface">#1A1A1A</item>
+        <item name="android:statusBarColor">#F5F7FA</item>
+        <item name="android:navigationBarColor">#F5F7FA</item>
+        <item name="android:windowBackground">#F5F7FA</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
+
+    <!-- Custom (cyan/purple accent) -->
+    <style name="Theme.LetoVPN.Custom" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">#00E5FF</item>
+        <item name="colorPrimaryContainer">#006064</item>
+        <item name="colorSecondary">#EA80FC</item>
+        <item name="colorSurface">#12121A</item>
+        <item name="colorOnSurface">#E8EAF6</item>
+        <item name="android:statusBarColor">#12121A</item>
+        <item name="android:navigationBarColor">#12121A</item>
+        <item name="android:windowBackground">#12121A</item>
+        <item name="android:windowActivityTransitions">true</item>
+    </style>
+
+    <!-- Dynamic will be applied at runtime on Android 12+ -->
+    <style name="Theme.LetoVPN.Dynamic" parent="Theme.Material3.DynamicColors.Dark.NoActionBar">
+        <item name="android:windowActivityTransitions">true</item>
     </style>
 </resources>

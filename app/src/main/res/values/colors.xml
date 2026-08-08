@@ -6,4 +6,7 @@
     <color name="text_primary">#E6EDF3</color>
     <color name="text_secondary">#8B949E</color>
     <color name="error_red">#FF5252</color>
+    <color name="bg_light">#F5F7FA</color>
+    <color name="card_light">#FFFFFF</color>
+    <color name="accent_cyan">#00E5FF</color>
 </resources>
