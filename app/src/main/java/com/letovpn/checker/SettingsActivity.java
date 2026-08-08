@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -35,7 +34,6 @@ public class SettingsActivity extends AppCompatActivity {
 
         SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
 
-        // Theme radios
         MaterialRadioButton themeDark = findViewById(R.id.themeDark);
         MaterialRadioButton themeLight = findViewById(R.id.themeLight);
         MaterialRadioButton themeCustom = findViewById(R.id.themeCustom);
@@ -49,21 +47,19 @@ public class SettingsActivity extends AppCompatActivity {
             default: themeDark.setChecked(true); break;
         }
 
-        // Method radios
-        MaterialRadioButton methodFast = findViewById(R.id.methodFast);
-        MaterialRadioButton methodBalanced = findViewById(R.id.methodBalanced);
-        MaterialRadioButton methodAccurate = findViewById(R.id.methodAccurate);
-        MaterialRadioButton methodPrecise = findViewById(R.id.methodPrecise);
+        MaterialRadioButton methodTcp = findViewById(R.id.methodTcp);
+        MaterialRadioButton methodTcpDns = findViewById(R.id.methodTcpDns);
+        MaterialRadioButton methodProxyGet = findViewById(R.id.methodProxyGet);
+        MaterialRadioButton methodDeep = findViewById(R.id.methodDeep);
 
-        String method = prefs.getString(KEY_METHOD, "BALANCED");
+        String method = prefs.getString(KEY_METHOD, "TCP_DNS");
         switch (method) {
-            case "FAST": methodFast.setChecked(true); break;
-            case "ACCURATE": methodAccurate.setChecked(true); break;
-            case "PRECISE": methodPrecise.setChecked(true); break;
-            default: methodBalanced.setChecked(true); break;
+            case "TCP": methodTcp.setChecked(true); break;
+            case "PROXY_GET": methodProxyGet.setChecked(true); break;
+            case "DEEP": methodDeep.setChecked(true); break;
+            default: methodTcpDns.setChecked(true); break;
         }
 
-        // Sliders
         Slider countSlider = findViewById(R.id.countSlider);
         TextView countValue = findViewById(R.id.countValue);
         Slider threadsSlider = findViewById(R.id.threadsSlider);
@@ -74,19 +70,17 @@ public class SettingsActivity extends AppCompatActivity {
         countValue.setText(count == 0 ? "Все" : String.valueOf(count));
 
         int threads = prefs.getInt(KEY_THREADS, 12);
-        threadsSlider.setValue(threads);
-        threadsValue.setText(String.valueOf(threads));
+        threadsSlider.setValue(Math.min(100, Math.max(4, threads)));
+        threadsValue.setText(String.valueOf((int) threadsSlider.getValue()));
 
         countSlider.addOnChangeListener((s, value, fromUser) -> {
             int v = (int) value;
             countValue.setText(v == 0 ? "Все" : String.valueOf(v));
         });
 
-        threadsSlider.addOnChangeListener((s, value, fromUser) -> {
-            threadsValue.setText(String.valueOf((int) value));
-        });
+        threadsSlider.addOnChangeListener((s, value, fromUser) ->
+                threadsValue.setText(String.valueOf((int) value)));
 
-        // Custom sources
         sourcesList = findViewById(R.id.sourcesList);
         TextInputEditText sourceInput = findViewById(R.id.sourceInput);
         MaterialButton btnAddSource = findViewById(R.id.btnAddSource);
@@ -106,47 +100,53 @@ public class SettingsActivity extends AppCompatActivity {
             Toast.makeText(this, "Источник добавлен", Toast.LENGTH_SHORT).show();
         });
 
-        // Telegram
-        findViewById(R.id.btnTelegram).setOnClickListener(v -> {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/letovpn_free")));
-        });
+        findViewById(R.id.btnTelegram).setOnClickListener(v ->
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/letovpn_free"))));
 
-        // Save
         findViewById(R.id.btnSaveSettings).setOnClickListener(v -> {
             String selectedTheme = ThemeHelper.THEME_DARK;
             if (themeLight.isChecked()) selectedTheme = ThemeHelper.THEME_LIGHT;
             else if (themeCustom.isChecked()) selectedTheme = ThemeHelper.THEME_CUSTOM;
             else if (themeDynamic.isChecked()) selectedTheme = ThemeHelper.THEME_DYNAMIC;
 
-            String selectedMethod = "BALANCED";
-            if (methodFast.isChecked()) selectedMethod = "FAST";
-            else if (methodAccurate.isChecked()) selectedMethod = "ACCURATE";
-            else if (methodPrecise.isChecked()) selectedMethod = "PRECISE";
+            String selectedMethod = "TCP_DNS";
+            if (methodTcp.isChecked()) selectedMethod = "TCP";
+            else if (methodProxyGet.isChecked()) selectedMethod = "PROXY_GET";
+            else if (methodDeep.isChecked()) selectedMethod = "DEEP";
 
             prefs.edit()
                     .putString(ThemeHelper.KEY_THEME, selectedTheme)
                     .putString(KEY_METHOD, selectedMethod)
                     .putInt(KEY_COUNT, (int) countSlider.getValue())
                     .putInt(KEY_THREADS, (int) threadsSlider.getValue())
-                    .putStringSet(KEY_SOURCES, customSources)
-                    .apply();
+                    .putStringSet(KEY_SOURCES, new HashSet<>(customSources))
+                    .commit(); // commit чтобы точно записалось до перезапуска
 
-            Toast.makeText(this, "Сохранено", Toast.LENGTH_SHORT).show();
-            // Restart main to apply theme
+            // Полный перезапуск приложения для применения темы
             Intent i = new Intent(this, MainActivity.class);
-            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
             finish();
+            Runtime.getRuntime().exit(0);
         });
     }
 
     private void refreshSourcesList() {
         sourcesList.removeAllViews();
+        if (customSources.isEmpty()) {
+            TextView empty = new TextView(this);
+            empty.setText("Нет своих источников\n(долгое нажатие по URL — удалить)");
+            empty.setTextSize(13f);
+            empty.setAlpha(0.6f);
+            sourcesList.addView(empty);
+            return;
+        }
         for (String url : customSources) {
             TextView tv = new TextView(this);
-            tv.setText("• " + (url.length() > 50 ? url.substring(0, 47) + "..." : url));
+            String shown = url.length() > 55 ? url.substring(0, 52) + "..." : url;
+            tv.setText("• " + shown);
             tv.setTextSize(13f);
-            tv.setPadding(0, 8, 0, 8);
+            tv.setPadding(0, 10, 0, 10);
             tv.setOnLongClickListener(v -> {
                 customSources.remove(url);
                 refreshSourcesList();
@@ -154,13 +154,6 @@ public class SettingsActivity extends AppCompatActivity {
                 return true;
             });
             sourcesList.addView(tv);
-        }
-        if (customSources.isEmpty()) {
-            TextView empty = new TextView(this);
-            empty.setText("Нет своих источников (долгое нажатие — удалить)");
-            empty.setTextSize(13f);
-            empty.setAlpha(0.6f);
-            sourcesList.addView(empty);
         }
     }
 }

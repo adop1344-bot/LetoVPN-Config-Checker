@@ -36,7 +36,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String SOURCES_URL = "https://raw.githubusercontent.com/adop1344-bot/LetoVPN_free/refs/heads/main/sources.txt";
+    private static final String SOURCES_URL =
+            "https://raw.githubusercontent.com/adop1344-bot/LetoVPN_free/refs/heads/main/sources.txt";
 
     private MaterialButton btnStart, btnSave, btnCopyTop;
     private ProgressBar progressBar;
@@ -67,7 +68,8 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
-        LayoutAnimationController anim = AnimationUtils.loadLayoutAnimation(this, R.anim.layout_animation_fall_down);
+        LayoutAnimationController anim =
+                AnimationUtils.loadLayoutAnimation(this, R.anim.layout_animation_fall_down);
         recyclerView.setLayoutAnimation(anim);
 
         findViewById(R.id.btnSettings).setOnClickListener(v ->
@@ -106,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
                     sources.addAll(fetchLines(SOURCES_URL));
                 } catch (Exception ignored) {}
 
-                // custom sources
                 Set<String> custom = prefs.getStringSet(SettingsActivity.KEY_SOURCES, new HashSet<>());
                 if (custom != null) sources.addAll(custom);
 
@@ -116,7 +117,8 @@ public class MainActivity extends AppCompatActivity {
                     try {
                         for (String line : fetchLines(src.trim())) {
                             line = line.trim();
-                            if (line.startsWith("vless://") || line.startsWith("vmess://") || line.startsWith("trojan://")) {
+                            if (line.startsWith("vless://") || line.startsWith("vmess://")
+                                    || line.startsWith("trojan://")) {
                                 allConfigs.add(line);
                             }
                         }
@@ -126,15 +128,14 @@ public class MainActivity extends AppCompatActivity {
                 List<String> unique = new ArrayList<>(new java.util.LinkedHashSet<>(allConfigs));
 
                 int maxCount = prefs.getInt(SettingsActivity.KEY_COUNT, 50);
-                String methodStr = prefs.getString(SettingsActivity.KEY_METHOD, "BALANCED");
+                String methodStr = prefs.getString(SettingsActivity.KEY_METHOD, "TCP_DNS");
                 ConfigChecker.Method method;
                 try {
                     method = ConfigChecker.Method.valueOf(methodStr);
                 } catch (Exception e) {
-                    method = ConfigChecker.Method.BALANCED;
+                    method = ConfigChecker.Method.TCP_DNS;
                 }
 
-                // 0 = all
                 if (maxCount > 0 && unique.size() > maxCount) {
                     unique = unique.subList(0, maxCount);
                 }
@@ -152,11 +153,11 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 AtomicInteger done = new AtomicInteger(0);
+                final ConfigChecker.Method m = method;
 
                 for (String raw : unique) {
                     if (!isRunning) break;
 
-                    final ConfigChecker.Method m = method;
                     executor.execute(() -> {
                         ConfigItem item = new ConfigItem(raw);
                         long latency = ConfigChecker.test(item, m);
@@ -168,12 +169,14 @@ public class MainActivity extends AppCompatActivity {
                         mainHandler.post(() -> {
                             if (item.working) {
                                 workingConfigs.add(item);
-                                Collections.sort(workingConfigs, (a, b) -> Long.compare(a.latency, b.latency));
+                                Collections.sort(workingConfigs,
+                                        (a, b) -> Long.compare(a.latency, b.latency));
                                 adapter.setItems(new ArrayList<>(workingConfigs));
                                 recyclerView.scheduleLayoutAnimation();
                             }
                             progressBar.setProgress(current);
-                            statusText.setText("Проверено: " + current + "/" + total + " | Рабочих: " + workingConfigs.size());
+                            statusText.setText("Проверено: " + current + "/" + total
+                                    + " | Рабочих: " + workingConfigs.size());
 
                             if (current >= total || !isRunning) {
                                 finishCheck();
@@ -205,8 +208,11 @@ public class MainActivity extends AppCompatActivity {
         btnCopyTop.setEnabled(has);
         if (has) {
             statusText.setText("Готово! Рабочих: " + workingConfigs.size());
-        } else if (statusText.getText().toString().startsWith("Проверено") || statusText.getText().toString().startsWith("Найдено")) {
-            statusText.setText("Готово. Рабочих конфигов нет");
+        } else {
+            String t = statusText.getText().toString();
+            if (t.startsWith("Проверено") || t.startsWith("Найдено")) {
+                statusText.setText("Готово. Рабочих конфигов нет");
+            }
         }
     }
 
@@ -216,7 +222,7 @@ public class MainActivity extends AppCompatActivity {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setConnectTimeout(8000);
         conn.setReadTimeout(12000);
-        conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.3");
+        conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.4");
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
             String line;
@@ -238,7 +244,6 @@ public class MainActivity extends AppCompatActivity {
                     writer.write(item.raw + "\n");
                 }
             }
-
             Toast.makeText(this, "Сохранено: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();

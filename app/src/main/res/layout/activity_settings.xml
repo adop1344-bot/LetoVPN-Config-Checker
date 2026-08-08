@@ -20,7 +20,6 @@
             android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="20dp" />
 
-        <!-- Theme -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -61,7 +60,6 @@
                 android:text="Динамическая (Android 12+)" />
         </RadioGroup>
 
-        <!-- Check method -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -77,32 +75,31 @@
             android:layout_marginBottom="20dp">
 
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodFast"
+                android:id="@+id/methodTcp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Неточная (Молния)" />
+                android:text="Неточная (TCP)" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodBalanced"
+                android:id="@+id/methodTcpDns"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Средняя (Баланс)"
+                android:text="Средняя (TCP+DNS)"
                 android:checked="true" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodAccurate"
+                android:id="@+id/methodProxyGet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Точная (Радар)" />
+                android:text="Точная (Via Proxy GET)" />
 
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodPrecise"
+                android:id="@+id/methodDeep"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Суперточная (Снайпер)" />
+                android:text="Суперточная (Deep)" />
         </RadioGroup>
 
-        <!-- Count -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -131,7 +128,6 @@
             android:alpha="0.7"
             android:layout_marginBottom="20dp" />
 
-        <!-- Threads -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -160,7 +156,6 @@
             android:alpha="0.7"
             android:layout_marginBottom="20dp" />
 
-        <!-- Custom sources -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
