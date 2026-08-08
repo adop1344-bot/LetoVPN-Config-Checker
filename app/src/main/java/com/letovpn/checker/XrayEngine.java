@@ -18,11 +18,8 @@ import java.util.zip.ZipInputStream;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
-/**
- * Скачивает Xray-core под ABI устройства и проверяет VLESS-конфиг
- * через локальный SOCKS-прокси.
- */
 public final class XrayEngine {
 
     private static final String TAG = "XrayEngine";
@@ -38,7 +35,6 @@ public final class XrayEngine {
             return true;
         }
         if (!downloading.compareAndSet(false, true)) {
-            // другой поток уже качает
             int wait = 0;
             while (downloading.get() && wait < 120) {
                 try { Thread.sleep(500); } catch (InterruptedException ignored) {}
@@ -58,14 +54,13 @@ public final class XrayEngine {
             else if (abi.contains("x86_64")) asset = "Xray-android-amd64.zip";
             else asset = "Xray-android-arm64-v8a.zip";
 
-            // фиксированная версия для стабильности
             String url = "https://github.com/XTLS/Xray-core/releases/download/v25.3.6/" + asset;
             File zip = new File(ctx.getFilesDir(), "xray.zip");
 
             HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setConnectTimeout(20000);
             conn.setReadTimeout(60000);
-            conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.5");
+            conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.6");
 
             try (InputStream in = new BufferedInputStream(conn.getInputStream());
                  FileOutputStream out = new FileOutputStream(zip)) {
@@ -74,7 +69,6 @@ public final class XrayEngine {
                 while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
             }
 
-            // unzip, ищем файл xray
             try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(
                     new java.io.FileInputStream(zip)))) {
                 ZipEntry entry;
@@ -110,9 +104,11 @@ public final class XrayEngine {
         return new File(ctx.getFilesDir(), "xray");
     }
 
-    public static long test(Context ctx, ConfigItem item) {
+    /**
+     * @param speedTest true = Максимум (Xray Speed): скачиваем данные через туннель
+     */
+    public static long test(Context ctx, ConfigItem item, boolean speedTest) {
         if (!item.raw.startsWith("vless://")) {
-            // xray-режим сейчас только для VLESS
             return ConfigChecker.test(item, ConfigChecker.Method.TCP_DNS, ctx);
         }
         if (!ensureBinary(ctx)) return -1;
@@ -133,34 +129,53 @@ public final class XrayEngine {
             pb.directory(ctx.getFilesDir());
             proc = pb.start();
 
-            // ждём подъёма прокси
-            Thread.sleep(800);
+            Thread.sleep(speedTest ? 1000 : 800);
 
             Proxy proxy = new Proxy(Proxy.Type.SOCKS, new InetSocketAddress("127.0.0.1", localPort));
             OkHttpClient client = new OkHttpClient.Builder()
                     .proxy(proxy)
-                    .connectTimeout(8, TimeUnit.SECONDS)
-                    .readTimeout(8, TimeUnit.SECONDS)
+                    .connectTimeout(10, TimeUnit.SECONDS)
+                    .readTimeout(speedTest ? 15 : 8, TimeUnit.SECONDS)
                     .followRedirects(false)
                     .build();
 
             long start = System.currentTimeMillis();
-            Request req = new Request.Builder()
-                    .url("https://www.gstatic.com/generate_204")
-                    .head()
-                    .build();
-            try (Response resp = client.newCall(req).execute()) {
-                if (resp.code() == 204 || resp.isSuccessful()) {
-                    return Math.max(1, System.currentTimeMillis() - start);
+
+            if (speedTest) {
+                // Реальное скачивание ~100KB через туннель — точнее чем HEAD
+                Request req = new Request.Builder()
+                        .url("https://speed.cloudflare.com/__down?bytes=102400")
+                        .get()
+                        .build();
+                try (Response resp = client.newCall(req).execute()) {
+                    if (!resp.isSuccessful()) return -1;
+                    ResponseBody body = resp.body();
+                    if (body == null) return -1;
+                    byte[] data = body.bytes();
+                    if (data.length < 1000) return -1;
+                    long elapsed = Math.max(1, System.currentTimeMillis() - start);
+                    // latency-like score: время скачивания (меньше = лучше)
+                    return elapsed;
                 }
+            } else {
+                Request req = new Request.Builder()
+                        .url("https://www.gstatic.com/generate_204")
+                        .head()
+                        .build();
+                try (Response resp = client.newCall(req).execute()) {
+                    if (resp.code() == 204 || resp.isSuccessful()) {
+                        return Math.max(1, System.currentTimeMillis() - start);
+                    }
+                }
+                return -1;
             }
-            return -1;
         } catch (Exception e) {
             Log.e(TAG, "xray test fail", e);
             return -1;
         } finally {
             if (proc != null) {
-                try { proc.destroy();
+                try {
+                    proc.destroy();
                     if (Build.VERSION.SDK_INT >= 26) proc.destroyForcibly();
                 } catch (Exception ignored) {}
             }
@@ -169,7 +184,6 @@ public final class XrayEngine {
         }
     }
 
-    /** Минимальный VLESS-конфиг (поддерживает reality/tls/ws базово). */
     private static String buildVlessConfig(ConfigItem item, int localPort) {
         String uuid = extractUuid(item.raw);
         String query = "";
@@ -230,13 +244,11 @@ public final class XrayEngine {
                 + "\"port\":" + item.port + ","
                 + "\"users\":[" + user + "]}]},"
                 + "\"streamSettings\":{" + stream + "}"
-                + "}]}"
-                ;
+                + "}]}";
     }
 
     private static String extractUuid(String raw) {
         try {
-            // vless://uuid@host
             int start = raw.indexOf("://") + 3;
             int at = raw.indexOf('@', start);
             if (at > start) return raw.substring(start, at);
