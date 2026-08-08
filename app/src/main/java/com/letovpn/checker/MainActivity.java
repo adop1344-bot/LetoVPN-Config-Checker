@@ -10,6 +10,8 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.view.animation.AnimationUtils;
+import android.view.animation.LayoutAnimationController;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,7 +27,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.apply(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -62,15 +67,15 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(adapter);
 
+        LayoutAnimationController anim = AnimationUtils.loadLayoutAnimation(this, R.anim.layout_animation_fall_down);
+        recyclerView.setLayoutAnimation(anim);
+
         findViewById(R.id.btnSettings).setOnClickListener(v ->
                 startActivity(new Intent(this, SettingsActivity.class)));
 
         btnStart.setOnClickListener(v -> {
-            if (isRunning) {
-                stopCheck();
-            } else {
-                startCheck();
-            }
+            if (isRunning) stopCheck();
+            else startCheck();
         });
 
         btnSave.setOnClickListener(v -> saveAllToFile());
@@ -91,22 +96,25 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS, MODE_PRIVATE);
         int threads = prefs.getInt(SettingsActivity.KEY_THREADS, 12);
 
-        // Create / recreate executor with selected thread count
-        if (executor != null && !executor.isShutdown()) {
-            executor.shutdownNow();
-        }
-        executor = Executors.newFixedThreadPool(Math.max(2, threads));
+        if (executor != null && !executor.isShutdown()) executor.shutdownNow();
+        executor = Executors.newFixedThreadPool(Math.max(2, Math.min(100, threads)));
 
         executor.execute(() -> {
             try {
-                List<String> sources = fetchLines(SOURCES_URL);
-                List<String> allConfigs = new ArrayList<>();
+                List<String> sources = new ArrayList<>();
+                try {
+                    sources.addAll(fetchLines(SOURCES_URL));
+                } catch (Exception ignored) {}
 
+                // custom sources
+                Set<String> custom = prefs.getStringSet(SettingsActivity.KEY_SOURCES, new HashSet<>());
+                if (custom != null) sources.addAll(custom);
+
+                List<String> allConfigs = new ArrayList<>();
                 for (String src : sources) {
                     if (!isRunning) break;
                     try {
-                        List<String> lines = fetchLines(src.trim());
-                        for (String line : lines) {
+                        for (String line : fetchLines(src.trim())) {
                             line = line.trim();
                             if (line.startsWith("vless://") || line.startsWith("vmess://") || line.startsWith("trojan://")) {
                                 allConfigs.add(line);
@@ -118,27 +126,40 @@ public class MainActivity extends AppCompatActivity {
                 List<String> unique = new ArrayList<>(new java.util.LinkedHashSet<>(allConfigs));
 
                 int maxCount = prefs.getInt(SettingsActivity.KEY_COUNT, 50);
-                String modeStr = prefs.getString(SettingsActivity.KEY_MODE, "TCP");
-                ConfigChecker.Mode mode = "PROXY_GET".equals(modeStr) ? ConfigChecker.Mode.PROXY_GET : ConfigChecker.Mode.TCP;
+                String methodStr = prefs.getString(SettingsActivity.KEY_METHOD, "BALANCED");
+                ConfigChecker.Method method;
+                try {
+                    method = ConfigChecker.Method.valueOf(methodStr);
+                } catch (Exception e) {
+                    method = ConfigChecker.Method.BALANCED;
+                }
 
-                if (unique.size() > maxCount) {
+                // 0 = all
+                if (maxCount > 0 && unique.size() > maxCount) {
                     unique = unique.subList(0, maxCount);
                 }
 
                 final int total = unique.size();
+                final String methodLabel = ConfigChecker.methodName(method);
                 mainHandler.post(() -> {
-                    statusText.setText("Найдено: " + total + " | Режим: " + modeStr + " | Потоков: " + threads);
-                    progressBar.setMax(total);
+                    statusText.setText("Найдено: " + total + " | " + methodLabel + " | Потоков: " + threads);
+                    progressBar.setMax(Math.max(1, total));
                 });
+
+                if (total == 0) {
+                    mainHandler.post(this::finishCheck);
+                    return;
+                }
 
                 AtomicInteger done = new AtomicInteger(0);
 
                 for (String raw : unique) {
                     if (!isRunning) break;
 
+                    final ConfigChecker.Method m = method;
                     executor.execute(() -> {
                         ConfigItem item = new ConfigItem(raw);
-                        long latency = ConfigChecker.test(item, mode);
+                        long latency = ConfigChecker.test(item, m);
                         item.latency = latency;
                         item.working = latency > 0;
 
@@ -149,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
                                 workingConfigs.add(item);
                                 Collections.sort(workingConfigs, (a, b) -> Long.compare(a.latency, b.latency));
                                 adapter.setItems(new ArrayList<>(workingConfigs));
+                                recyclerView.scheduleLayoutAnimation();
                             }
                             progressBar.setProgress(current);
                             statusText.setText("Проверено: " + current + "/" + total + " | Рабочих: " + workingConfigs.size());
@@ -158,10 +180,6 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                     });
-                }
-
-                if (total == 0) {
-                    mainHandler.post(this::finishCheck);
                 }
 
             } catch (Exception e) {
@@ -187,6 +205,8 @@ public class MainActivity extends AppCompatActivity {
         btnCopyTop.setEnabled(has);
         if (has) {
             statusText.setText("Готово! Рабочих: " + workingConfigs.size());
+        } else if (statusText.getText().toString().startsWith("Проверено") || statusText.getText().toString().startsWith("Найдено")) {
+            statusText.setText("Готово. Рабочих конфигов нет");
         }
     }
 
@@ -195,8 +215,8 @@ public class MainActivity extends AppCompatActivity {
         URL url = new URL(urlStr);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setConnectTimeout(8000);
-        conn.setReadTimeout(10000);
-        conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.0");
+        conn.setReadTimeout(12000);
+        conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.3");
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
             String line;
@@ -221,7 +241,7 @@ public class MainActivity extends AppCompatActivity {
 
             Toast.makeText(this, "Сохранено: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
-            Toast.makeText(this, "Ошибка сохранения: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -231,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < count; i++) {
             sb.append(workingConfigs.get(i).raw).append("\n");
         }
-
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.setPrimaryClip(ClipData.newPlainText("top10", sb.toString()));
         Toast.makeText(this, "Скопировано топ-" + count, Toast.LENGTH_SHORT).show();
@@ -241,8 +260,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         isRunning = false;
-        if (executor != null) {
-            executor.shutdownNow();
-        }
+        if (executor != null) executor.shutdownNow();
     }
 }
