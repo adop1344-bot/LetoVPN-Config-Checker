@@ -2,9 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
     android:padding="16dp">
 
     <TextView
@@ -12,9 +12,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="LetoVPN Checker"
-        android:textColor="@color/accent_green"
         android:textSize="24sp"
         android:textStyle="bold"
+        android:textColor="?attr/colorPrimary"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/btnSettings"
         app:layout_constraintTop_toTopOf="parent" />
@@ -26,46 +26,58 @@
         android:src="@android:drawable/ic_menu_preferences"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/settings"
-        app:tint="@color/text_secondary"
+        app:tint="?attr/colorOnSurface"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/statsCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="2dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/title">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="14sp"
+                android:text="Готов к проверке" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="10dp"
+                android:visibility="gone"
+                android:progressTint="?attr/colorPrimary" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnStart"
         android:layout_width="0dp"
         android:layout_height="56dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="14dp"
         android:text="@string/start_check"
         android:textSize="16sp"
-        app:backgroundTint="@color/accent_green"
         app:cornerRadius="16dp"
-        android:textColor="#000000"
+        app:backgroundTint="?attr/colorPrimary"
+        android:textColor="@android:color/black"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/title" />
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
-        android:layout_width="0dp"
-        android:layout_height="8dp"
-        android:layout_marginTop="12dp"
-        android:visibility="gone"
-        android:progressTint="@color/accent_green"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/btnStart" />
-
-    <TextView
-        android:id="@+id/statusText"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/progressBar" />
+        app:layout_constraintTop_toBottomOf="@id/statsCard" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
@@ -73,7 +85,8 @@
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
         android:clipToPadding="false"
-        app:layout_constraintTop_toBottomOf="@id/statusText"
+        android:layoutAnimation="@anim/layout_animation_fall_down"
+        app:layout_constraintTop_toBottomOf="@id/btnStart"
         app:layout_constraintBottom_toTopOf="@id/bottomBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -98,8 +111,8 @@
             android:layout_marginEnd="8dp"
             android:text="@string/save_all"
             android:enabled="false"
-            app:strokeColor="@color/accent_green"
-            android:textColor="@color/accent_green"
+            app:strokeColor="?attr/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             app:cornerRadius="12dp" />
 
         <com.google.android.material.button.MaterialButton
@@ -110,8 +123,8 @@
             android:layout_weight="1"
             android:text="@string/copy_top10"
             android:enabled="false"
-            app:strokeColor="@color/accent_green"
-            android:textColor="@color/accent_green"
+            app:strokeColor="?attr/colorPrimary"
+            android:textColor="?attr/colorPrimary"
             app:cornerRadius="12dp" />
     </LinearLayout>
 
