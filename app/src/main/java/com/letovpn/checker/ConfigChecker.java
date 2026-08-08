@@ -1,5 +1,6 @@
 package com.letovpn.checker;
 
+import android.content.Context;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -8,18 +9,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-/**
- * Реальные методы проверки доступности сервера конфига.
- * Без xray-core нельзя полностью прогнать VLESS-туннель,
- * поэтому методы проверяют сеть до хоста разными способами.
- */
 public class ConfigChecker {
 
     public enum Method {
-        TCP,          // Неточная (TCP)
-        TCP_DNS,      // Средняя (TCP+DNS)
-        PROXY_GET,    // Точная (Via Proxy GET)
-        DEEP          // Суперточная (Deep)
+        TCP,       // Неточная (TCP)
+        TCP_DNS,   // Средняя (TCP+DNS)
+        PROXY_GET, // Точная (Via Proxy GET)
+        DEEP,      // Суперточная (Deep)
+        XRAY       // Xray (скачивает ядро)
     }
 
     public static String methodName(Method m) {
@@ -28,6 +25,7 @@ public class ConfigChecker {
             case TCP_DNS:   return "Средняя (TCP+DNS)";
             case PROXY_GET: return "Точная (Via Proxy GET)";
             case DEEP:      return "Суперточная (Deep)";
+            case XRAY:      return "Xray (ядро)";
             default:        return "?";
         }
     }
@@ -38,7 +36,7 @@ public class ConfigChecker {
             .followRedirects(false)
             .build();
 
-    public static long test(ConfigItem item, Method method) {
+    public static long test(ConfigItem item, Method method, Context ctx) {
         if (item.host == null || item.host.isEmpty() || item.port <= 0) return -1;
 
         switch (method) {
@@ -50,12 +48,13 @@ public class ConfigChecker {
                 return viaProxyGet(item.host, item.port);
             case DEEP:
                 return deepScan(item.host, item.port);
+            case XRAY:
+                return XrayEngine.test(ctx, item);
             default:
                 return tcpConnect(item.host, item.port, 3000);
         }
     }
 
-    /** Неточная (TCP): один TCP-коннект с коротким таймаутом */
     private static long tcpConnect(String host, int port, int timeoutMs) {
         long start = System.currentTimeMillis();
         try (Socket socket = new Socket()) {
@@ -67,14 +66,11 @@ public class ConfigChecker {
         }
     }
 
-    /** Средняя (TCP+DNS): сначала резолв DNS, потом TCP */
     private static long tcpWithDns(String host, int port) {
         long start = System.currentTimeMillis();
         try {
             InetAddress[] addrs = InetAddress.getAllByName(host);
             if (addrs == null || addrs.length == 0) return -1;
-
-            // пробуем первый резолвнутый адрес
             try (Socket socket = new Socket()) {
                 socket.connect(new InetSocketAddress(addrs[0], port), 3500);
                 if (!socket.isConnected()) return -1;
@@ -85,16 +81,9 @@ public class ConfigChecker {
         }
     }
 
-    /**
-     * Точная (Via Proxy GET):
-     * 1) TCP до хоста конфига
-     * 2) HTTP HEAD к тестовому URL (проверка что с устройства есть выход в сеть
-     *    после успешного коннекта к серверу — эмуляция «get через доступность»)
-     */
     private static long viaProxyGet(String host, int port) {
         long tcp = tcpConnect(host, port, 4000);
         if (tcp < 0) return -1;
-
         long start = System.currentTimeMillis();
         try {
             Request request = new Request.Builder()
@@ -102,25 +91,14 @@ public class ConfigChecker {
                     .head()
                     .build();
             try (Response response = httpClient.newCall(request).execute()) {
-                long httpPart = System.currentTimeMillis() - start;
-                // успех если TCP ок; HTTP добавляет к latency
-                return tcp + Math.max(0, httpPart);
+                return tcp + Math.max(0, System.currentTimeMillis() - start);
             }
         } catch (Exception e) {
-            // TCP прошёл — считаем рабочим, HTTP может упасть из-за сети
             return tcp;
         }
     }
 
-    /**
-     * Суперточная (Deep):
-     * DNS + 2 TCP-попытки + HTTP HEAD.
-     * Берём лучший TCP и прибавляем HTTP если он прошёл.
-     */
     private static long deepScan(String host, int port) {
-        long start = System.currentTimeMillis();
-
-        // DNS
         InetAddress addr;
         try {
             InetAddress[] addrs = InetAddress.getAllByName(host);
