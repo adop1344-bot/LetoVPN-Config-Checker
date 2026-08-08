@@ -10,14 +10,28 @@ android {
         applicationId "com.letovpn.checker"
         minSdk 26
         targetSdk 34
-        versionCode 7
-        versionName "1.6"
+        versionCode 8
+        versionName "1.6.1"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file("${System.getenv('KEYSTORE_PATH') ?: '../keystore/letovpn.keystore'}")
+            storePassword "letovpn_checker_2026"
+            keyAlias "letovpn"
+            keyPassword "letovpn_checker_2026"
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            // та же подпись — обновления без удаления
+            signingConfig signingConfigs.release
         }
     }
 
