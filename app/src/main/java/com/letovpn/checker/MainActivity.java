@@ -4,7 +4,6 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -27,7 +26,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -88,28 +86,45 @@ public class MainActivity extends AppCompatActivity {
         isRunning = true;
         workingConfigs.clear();
         adapter.clear();
-        btnStart.setText(R.string.stop);
+        btnStart.setText("⏹ Стоп");
         btnSave.setEnabled(false);
         btnCopyTop.setEnabled(false);
         progressBar.setVisibility(View.VISIBLE);
         progressBar.setProgress(0);
         statusText.setText("Загрузка источников...");
 
-        SharedPreferences prefs = getSharedPreferences(SettingsActivity.PREFS, MODE_PRIVATE);
-        int threads = prefs.getInt(SettingsActivity.KEY_THREADS, 12);
-
+        int threads = Prefs.getThreads(this);
         if (executor != null && !executor.isShutdown()) executor.shutdownNow();
-        executor = Executors.newFixedThreadPool(Math.max(2, Math.min(100, threads)));
+
+        // Xray лучше с меньшим параллелизмом
+        String methodStr = Prefs.getMethod(this);
+        int poolSize = "XRAY".equals(methodStr)
+                ? Math.min(4, Math.max(1, threads))
+                : Math.max(2, Math.min(100, threads));
+        executor = Executors.newFixedThreadPool(poolSize);
+
+        final Context appCtx = getApplicationContext();
 
         executor.execute(() -> {
             try {
-                List<String> sources = new ArrayList<>();
-                try {
-                    sources.addAll(fetchLines(SOURCES_URL));
-                } catch (Exception ignored) {}
+                // для Xray заранее скачаем бинарник один раз
+                if ("XRAY".equals(methodStr)) {
+                    mainHandler.post(() -> statusText.setText("Скачивание Xray-core..."));
+                    boolean ok = XrayEngine.ensureBinary(appCtx);
+                    if (!ok) {
+                        mainHandler.post(() -> {
+                            statusText.setText("Не удалось скачать Xray");
+                            finishCheck();
+                        });
+                        return;
+                    }
+                }
 
-                Set<String> custom = prefs.getStringSet(SettingsActivity.KEY_SOURCES, new HashSet<>());
-                if (custom != null) sources.addAll(custom);
+                List<String> sources = new ArrayList<>();
+                try { sources.addAll(fetchLines(SOURCES_URL)); } catch (Exception ignored) {}
+
+                Set<String> custom = Prefs.getSources(appCtx);
+                sources.addAll(custom);
 
                 List<String> allConfigs = new ArrayList<>();
                 for (String src : sources) {
@@ -127,8 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
                 List<String> unique = new ArrayList<>(new java.util.LinkedHashSet<>(allConfigs));
 
-                int maxCount = prefs.getInt(SettingsActivity.KEY_COUNT, 50);
-                String methodStr = prefs.getString(SettingsActivity.KEY_METHOD, "TCP_DNS");
+                int maxCount = Prefs.getCount(appCtx);
                 ConfigChecker.Method method;
                 try {
                     method = ConfigChecker.Method.valueOf(methodStr);
@@ -143,7 +157,7 @@ public class MainActivity extends AppCompatActivity {
                 final int total = unique.size();
                 final String methodLabel = ConfigChecker.methodName(method);
                 mainHandler.post(() -> {
-                    statusText.setText("Найдено: " + total + " | " + methodLabel + " | Потоков: " + threads);
+                    statusText.setText("Найдено: " + total + " · " + methodLabel + " · потоков: " + poolSize);
                     progressBar.setMax(Math.max(1, total));
                 });
 
@@ -160,7 +174,7 @@ public class MainActivity extends AppCompatActivity {
 
                     executor.execute(() -> {
                         ConfigItem item = new ConfigItem(raw);
-                        long latency = ConfigChecker.test(item, m);
+                        long latency = ConfigChecker.test(item, m, appCtx);
                         item.latency = latency;
                         item.working = latency > 0;
 
@@ -176,11 +190,9 @@ public class MainActivity extends AppCompatActivity {
                             }
                             progressBar.setProgress(current);
                             statusText.setText("Проверено: " + current + "/" + total
-                                    + " | Рабочих: " + workingConfigs.size());
+                                    + " · рабочих: " + workingConfigs.size());
 
-                            if (current >= total || !isRunning) {
-                                finishCheck();
-                            }
+                            if (current >= total || !isRunning) finishCheck();
                         });
                     });
                 }
@@ -201,17 +213,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void finishCheck() {
         isRunning = false;
-        btnStart.setText(R.string.start_check);
+        btnStart.setText("▶  Проверить");
         progressBar.setVisibility(View.GONE);
         boolean has = !workingConfigs.isEmpty();
         btnSave.setEnabled(has);
         btnCopyTop.setEnabled(has);
         if (has) {
-            statusText.setText("Готово! Рабочих: " + workingConfigs.size());
+            statusText.setText("Готово · рабочих: " + workingConfigs.size());
         } else {
             String t = statusText.getText().toString();
             if (t.startsWith("Проверено") || t.startsWith("Найдено")) {
-                statusText.setText("Готово. Рабочих конфигов нет");
+                statusText.setText("Готово · рабочих нет");
             }
         }
     }
@@ -222,13 +234,10 @@ public class MainActivity extends AppCompatActivity {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setConnectTimeout(8000);
         conn.setReadTimeout(12000);
-        conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.4");
-
+        conn.setRequestProperty("User-Agent", "LetoVPN-Checker/1.5");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
             String line;
-            while ((line = reader.readLine()) != null) {
-                lines.add(line);
-            }
+            while ((line = reader.readLine()) != null) lines.add(line);
         }
         return lines;
     }
@@ -238,11 +247,8 @@ public class MainActivity extends AppCompatActivity {
             File dir = getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
             if (dir == null) dir = getFilesDir();
             File file = new File(dir, "letovpn_working_configs.txt");
-
             try (FileWriter writer = new FileWriter(file)) {
-                for (ConfigItem item : workingConfigs) {
-                    writer.write(item.raw + "\n");
-                }
+                for (ConfigItem item : workingConfigs) writer.write(item.raw + "\n");
             }
             Toast.makeText(this, "Сохранено: " + file.getAbsolutePath(), Toast.LENGTH_LONG).show();
         } catch (Exception e) {
@@ -253,9 +259,7 @@ public class MainActivity extends AppCompatActivity {
     private void copyTop10() {
         StringBuilder sb = new StringBuilder();
         int count = Math.min(10, workingConfigs.size());
-        for (int i = 0; i < count; i++) {
-            sb.append(workingConfigs.get(i).raw).append("\n");
-        }
+        for (int i = 0; i < count; i++) sb.append(workingConfigs.get(i).raw).append("\n");
         ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
         clipboard.setPrimaryClip(ClipData.newPlainText("top10", sb.toString()));
         Toast.makeText(this, "Скопировано топ-" + count, Toast.LENGTH_SHORT).show();

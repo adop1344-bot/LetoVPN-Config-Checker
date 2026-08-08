@@ -15,203 +15,119 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Настройки"
-            android:textSize="22sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="?attr/colorPrimary"
             android:layout_marginBottom="20dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Тема"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Тема" android:textSize="16sp" android:layout_marginBottom="8dp" />
 
-        <RadioGroup
-            android:id="@+id/themeGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+        <RadioGroup android:id="@+id/themeGroup" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical"
             android:layout_marginBottom="20dp">
-
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/themeDark"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Тёмная"
-                android:checked="true" />
-
+                android:id="@+id/themeDark" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Тёмная" android:checked="true" />
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/themeLight"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Светлая" />
-
+                android:id="@+id/themeLight" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Светлая" />
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/themeCustom"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Пользовательская" />
-
+                android:id="@+id/themeCustom" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Пользовательская" />
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/themeDynamic"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Динамическая (Android 12+)" />
+                android:id="@+id/themeDynamic" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Динамическая (Android 12+)" />
         </RadioGroup>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Метод проверки"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Метод проверки" android:textSize="16sp" android:layout_marginBottom="8dp" />
 
-        <RadioGroup
-            android:id="@+id/methodGroup"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+        <RadioGroup android:id="@+id/methodGroup" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical"
             android:layout_marginBottom="20dp">
-
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodTcp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Неточная (TCP)" />
-
+                android:id="@+id/methodTcp" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Неточная (TCP)" />
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodTcpDns"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Средняя (TCP+DNS)"
-                android:checked="true" />
-
+                android:id="@+id/methodTcpDns" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Средняя (TCP+DNS)" android:checked="true" />
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodProxyGet"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Точная (Via Proxy GET)" />
-
+                android:id="@+id/methodProxyGet" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Точная (Via Proxy GET)" />
             <com.google.android.material.radiobutton.MaterialRadioButton
-                android:id="@+id/methodDeep"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Суперточная (Deep)" />
+                android:id="@+id/methodDeep" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Суперточная (Deep)" />
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/methodXray" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:text="Xray (ядро, скачается само)" />
         </RadioGroup>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Количество конфигов (0 = все)"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Количество конфигов (0 = все)" android:textSize="16sp" android:layout_marginBottom="8dp" />
 
         <com.google.android.material.slider.Slider
-            android:id="@+id/countSlider"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:valueFrom="0"
-            android:valueTo="500"
-            android:value="50"
-            android:stepSize="10"
-            app:thumbColor="?attr/colorPrimary"
-            app:trackColorActive="?attr/colorPrimary"
+            android:id="@+id/countSlider" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:valueFrom="0" android:valueTo="500"
+            android:value="50" android:stepSize="10"
+            app:thumbColor="?attr/colorPrimary" app:trackColorActive="?attr/colorPrimary"
             android:layout_marginBottom="4dp" />
 
-        <TextView
-            android:id="@+id/countValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="50"
-            android:textSize="14sp"
-            android:alpha="0.7"
-            android:layout_marginBottom="20dp" />
+        <TextView android:id="@+id/countValue" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="50" android:textSize="14sp"
+            android:alpha="0.7" android:layout_marginBottom="20dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Многопоточность (потоки)"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Многопоточность (потоки)" android:textSize="16sp" android:layout_marginBottom="8dp" />
 
         <com.google.android.material.slider.Slider
-            android:id="@+id/threadsSlider"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:valueFrom="4"
-            android:valueTo="100"
-            android:value="12"
-            android:stepSize="2"
-            app:thumbColor="?attr/colorPrimary"
-            app:trackColorActive="?attr/colorPrimary"
+            android:id="@+id/threadsSlider" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:valueFrom="4" android:valueTo="100"
+            android:value="12" android:stepSize="2"
+            app:thumbColor="?attr/colorPrimary" app:trackColorActive="?attr/colorPrimary"
             android:layout_marginBottom="4dp" />
 
-        <TextView
-            android:id="@+id/threadsValue"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="12"
-            android:textSize="14sp"
-            android:alpha="0.7"
-            android:layout_marginBottom="20dp" />
+        <TextView android:id="@+id/threadsValue" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="12" android:textSize="14sp"
+            android:alpha="0.7" android:layout_marginBottom="20dp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Свои источники"
-            android:textSize="16sp"
-            android:layout_marginBottom="8dp" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="Свои источники" android:textSize="16sp" android:layout_marginBottom="8dp" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
             android:hint="URL источника"
             style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
             android:layout_marginBottom="8dp">
-
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/sourceInput"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:inputType="textUri"
-                android:maxLines="2" />
+                android:id="@+id/sourceInput" android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:inputType="textUri" android:maxLines="2" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnAddSource"
             style="@style/Widget.Material3.Button.TonalButton"
-            android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:text="Добавить источник"
-            app:cornerRadius="12dp"
+            android:layout_width="match_parent" android:layout_height="48dp"
+            android:text="Добавить источник" app:cornerRadius="12dp"
             android:layout_marginBottom="8dp" />
 
-        <LinearLayout
-            android:id="@+id/sourcesList"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
+        <LinearLayout android:id="@+id/sourcesList" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical"
             android:layout_marginBottom="20dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnTelegram"
             style="@style/Widget.Material3.Button.OutlinedButton"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_width="match_parent" android:layout_height="52dp"
             android:text="Telegram: @letovpn_free"
-            app:strokeColor="?attr/colorPrimary"
-            android:textColor="?attr/colorPrimary"
-            app:cornerRadius="12dp"
-            android:layout_marginBottom="12dp" />
+            app:strokeColor="?attr/colorPrimary" android:textColor="?attr/colorPrimary"
+            app:cornerRadius="12dp" android:layout_marginBottom="12dp" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnSaveSettings"
-            android:layout_width="match_parent"
-            android:layout_height="52dp"
+            android:layout_width="match_parent" android:layout_height="52dp"
             android:text="Сохранить"
-            app:backgroundTint="?attr/colorPrimary"
-            android:textColor="@android:color/black"
+            app:backgroundTint="?attr/colorPrimary" android:textColor="@android:color/black"
             app:cornerRadius="12dp" />
 
     </LinearLayout>
